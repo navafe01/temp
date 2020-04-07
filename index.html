@@ -71,11 +71,11 @@
 
         var filteredData = data.filter(function(d){
             if (
-                (selectedSource      === '' || d.Source      === selectedSource) &&
-                (selectedDestination === '' || d.Destination === selectedDestination)  &&
-                (selectedYear        === '' || d.Year        === selectedYear) &&
-                (selectedCategory    === '' || d.Category    === selectedCategory) &&
-                (selectedProduct     === '' || d.Product     === selectedProduct)
+                (selectedSource      === '' || selectedSource      === '(All)' || d.Source      === selectedSource) &&
+                (selectedDestination === '' || selectedDestination === '(All)' || d.Destination === selectedDestination)  &&
+                (selectedYear        === '' || selectedYear        === '(All)' || d.Year        === selectedYear) &&
+                (selectedCategory    === '' || selectedCategory    === '(All)' || d.Category    === selectedCategory) &&
+                (selectedProduct     === '' || selectedProduct     === '(All)' || d.Product     === selectedProduct)
             ) {
                 return d;
             }
