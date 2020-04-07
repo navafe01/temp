@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.24.0/d3-legend.min.js"></script>
+<script src="https://d3js.org/colorbrewer.v1.min.js"></script>
+<style>
+
+    path.link {
+        fill: none;
+        stroke: black;
+        stroke-width: 1.5px;
+        opacity: .40;
+    }
+    circle {
+        stroke: #fff;
+        stroke: black;
+        stroke-width: 1.5px;
+    }
+    text {
+        fill: #000;
+        font: 10px sans-serif;
+        pointer-events: none;
+    }
+
+    div.tooltip {
+        position: absolute;
+        background-color: white;
+        max-width: 200px;
+        height: auto;
+        padding: 1px;
+        border-style: solid;
+        border-radius: 4px;
+        border-width: 1px;
+        box-shadow: 3px 3px 10px rgba(0, 0, 0, .5);
+        pointer-events: none;
+    }
+
+
+</style>
+<body>
+
+<script>
+
+    // For Tableau
+    var width  = 1200, height = 800;
+    var margin = ({top: 70, right: 30, bottom: 30, left: 40});
+    var maxItems = 100;
+
+    // Data Filters
+    var selectedSource      = '';
+    var selectedDestination = '';
+    var selectedYear        = '2015';
+    var selectedCategory    = '';
+    var selectedProduct     = '27 - Mineral fuels';
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
+    // DATA PREPARATION
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
+    d3.dsv(",", "data_1b.csv").then(function(data) {
+        var nodes = {};
+
+        var filteredData = data.filter(function(d){
+            if (
+                (selectedSource      === '' || d.Source      === selectedSource) &&
+                (selectedDestination === '' || d.Destination === selectedDestination)  &&
+                (selectedYear        === '' || d.Year        === selectedYear) &&
+                (selectedCategory    === '' || d.Category    === selectedCategory) &&
+                (selectedProduct     === '' || d.Product     === selectedProduct)
+            ) {
+                return d;
+            }
+        });
+
+        var topData = filteredData.sort(function(a, b) {
+            return d3.descending(+a.Value, +b.Value);
+        }).slice(0, maxItems);
+
+        // Nest by Region/Date
+        var rollupData = d3.nest()
+            .key(function(d) { return d.Source; })
+            .key(function(d) { return d.Destination })
+            .rollup(function(recs){return {
+                "value": d3.sum(recs, function(d){return +d.Value;})}})
+            .entries(topData);
+
+        var links = [];
+        rollupData.forEach(function(d0){
+            d0.values.forEach(function(d1) {
+                links.push({
+                    'source': d0.key,
+                    'target': d1.key,
+                    'value':  d1.value.value
+                })
+            })
+        });
+
+        var sourceNodes = [];
+        var destinationNodes = [];
+        rollupData.forEach(function(n0)  {
+            var tmp_val = 0.0;
+            n0.values.forEach(function(n1) {
+                destinationNodes.push({
+                    key: n1.key,
+                    value: -n1.value.value
+                });
+                tmp_val += n1.value.value;
+            });
+            sourceNodes.push({
+                key: n0.key,
+                value: tmp_val
+            });
+        });
+
+        var flattenNodes = sourceNodes.concat(destinationNodes) ;
+
+        var sumNodes = d3.nest()
+            .key(function(d) {return d.key})
+            .rollup(function(recs){return { "value": d3.sum(recs, function(d){return +d.value;})}})
+            .entries(flattenNodes);
+
+        var flatNodes = [];
+        sumNodes.forEach(function(n0){
+            flatNodes.push({
+                key: n0.key,
+                value: n0.value.value
+            });
+        });
+
+        // compute the distinct nodes from the links.
+        links.forEach(function(link) {
+            link.source = nodes[link.source] || (nodes[link.source] = {name: link.source});
+            //link.target = nodes[link.target] || (nodes[link.target] = {name: link.target});
+        });
+        links.forEach(function(link) {
+            //link.source = nodes[link.source] || (nodes[link.source] = {name: link.source});
+            link.target = nodes[link.target] || (nodes[link.target] = {name: link.target});
+        });
+
+        var minVal = d3.min(flatNodes, function(d) {return d.value});
+        var maxVal = d3.max(flatNodes, function(d) {return d.value});
+
+        // Variables for Nodes
+        var nodeColor = d3.scaleQuantize().domain([minVal, maxVal]).range(colorbrewer.RdBu[9]);
+        var nodeSize  = d3.scaleQuantize().domain([0, d3.max([Math.abs(maxVal), Math.abs(minVal)])]).range([10,35]);
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Simulation
+        //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        var simulation = d3.forceSimulation()
+            .nodes(d3.values(nodes))
+            .force('center', d3.forceCenter(width / 2.3, ((height) / 2.3)  + margin.top))
+            .force("charge", d3.forceManyBody().strength(-200).distanceMin(100).distanceMax(1000))
+            .force("collide", d3.forceCollide().strength(-1000).radius(5))
+            .force("link", d3.forceLink(links).distance(300))
+            .force("x", d3.forceX().strength(0.1))
+            .force("y", d3.forceY().strength(0.2))
+            //.on('tick', ticked);
+            .stop();
+
+        var svg = d3.select("body").append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        var loading = svg.append("text")
+            .attr("dy", "0.35em")
+            .attr("text-anchor", "middle")
+            .attr("font-family", "sans-serif")
+            .attr("font-size", 10)
+            .text("Simulating. One moment please…");
+
+        /*
+    function ticked() {
+        path.attr("d", function(d) {
+            var dx = d.target.x - d.source.x,
+                dy = d.target.y - d.source.y,
+                dr = Math.sqrt(dx * dx + dy * dy);
+            return "M" +  d.source.x + "," +  d.source.y +
+                "A" + dr + "," + dr + " 0 0,1 " +
+                d.target.x + "," +
+                d.target.y;
+        });
+        */
+        d3.timeout(function() {
+            loading.remove();
+
+            // See https://github.com/d3/d3-force/blob/master/README.md#simulation_tick
+            for (var i = 0, n = Math.ceil(Math.log(simulation.alphaMin()) / Math.log(1 - simulation.alphaDecay())); i < n; ++i) {
+                simulation.tick();
+            }
+            path.attr("d", function(d) {
+                // Total difference in x and y from source to target
+                diffX = d.target.x - d.source.x;
+                diffY = d.target.y - d.source.y;
+
+                // Length of path from center of source node to center of target node
+                pathLength = Math.sqrt((diffX * diffX) + (diffY * diffY));
+
+                flatNodeValue = flatNodes.filter(function(d1){
+                    return d1.key == d.target.name;
+                });
+
+                targetRadius = nodeSize(Math.abs(flatNodeValue[0].value)) + 5;
+
+                // x and y distances from center to outside edge of target node
+                offsetX = (diffX * targetRadius) / pathLength;
+                offsetY = (diffY * targetRadius) / pathLength;
+
+                //return "M" + d.source.x + "," + d.source.y + "L" + (d.target.x - offsetX) + "," + (d.target.y - offsetY);
+                return "M" + d.source.x + "," + d.source.y +
+                       "A" + pathLength + "," + pathLength + " 0 0,1 " +
+                        //"L " +
+                       (d.target.x - offsetX) + "," + (d.target.y - offsetY);
+            });
+
+            node.attr("transform", function(d) {
+                return "translate(" + d.x + "," + d.y + ")";
+            });
+        });
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////
+        // ARROW
+        //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        svg.append("svg:defs").append("svg:marker")
+            .attr("id", "triangle")
+            .attr("refX", 6)
+            .attr("refY", 6)
+            .attr("markerWidth", 30)
+            .attr("markerHeight", 30)
+            .attr("markerUnits","userSpaceOnUse")
+            .attr("orient", "auto")
+            .append("path")
+            .attr("d", "M 0 0 12 6 0 12 3 6")
+            .style("fill", "black");
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////
+        // PATHS
+        //////////////////////////////////////////////////////////////////////////////////////////////////////
+        var pathSize  = d3.scaleQuantize().domain([0, d3.max([Math.abs(maxVal), Math.abs(minVal)])]).range([3,15]);
+
+        var path = svg.append("g")
+            .selectAll("path")
+            .data(links).enter()
+            .append("path")
+            .attr("class", function(d) { return "link " + d.type; })
+            .style("stroke-width", function(d){
+                return pathSize(d.value);
+            })
+            .attr("marker-end", "url(#triangle)");
+
+        var tooltip = d3.select("body")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
+
+        path.on('mouseover.tooltip', function(d) {
+                tooltip.transition()
+                    .duration(300)
+                    .style("opacity", .8);
+                tooltip.html(
+                    "<b>Importer:</b>"+ d.source.name +
+                    "<br/><b>Exporter:</b>" + d.target.name +
+                    "<br/><b>Value:</b>"  + "$" + d3.format(",.2f")(d.value/1000000000)+"B"
+                    )
+                    .style("left", (d3.event.pageX) + "px")
+                    .style("top", (d3.event.pageY + 3) + "px");
+            })
+            .on("mouseout.tooltip", function() {
+                tooltip.transition()
+                    .duration(100)
+                    .style("opacity", 0);
+            })
+            .on("mousemove", function() {
+                tooltip.style("left", (d3.event.pageX) + "px")
+                    .style("top", (d3.event.pageY + 10) + "px");
+            });
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////
+        // NODES
+        //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        var node = svg.selectAll(".node")
+            .data(simulation.nodes())
+            .enter().append("g")
+            .attr("class", "node");
+
+        node.append("circle")
+            .data(flatNodes)
+            .attr("r", function(d) {
+                return nodeSize(Math.abs(d.value));
+            })
+            .attr('fill', function(d){
+                return nodeColor(d.value)
+            });
+
+        node
+            .on('mouseover.tooltip', function(d) {
+                tooltip.transition()
+                    .duration(300)
+                    .style("opacity", .8);
+                var imports = destinationNodes.filter(function (d1) {
+                    return d1.key === d.name;
+                });
+                var exports = sourceNodes.filter(function (d1) {
+                    return d1.key === d.name;
+                });
+                var country = flatNodes.filter(function (d1) {
+                    return d1.key === d.name;
+                });
+
+                var importVal = 0, exportVal = 0;
+                if (typeof(imports) != "undefined" && imports != 0) {
+                    importVal = imports[0].value/1000000000;
+                }
+                if (typeof(exports) != "undefined" && exports != 0) {
+                    exportVal = exports[0].value/1000000000;
+                }
+
+                tooltip.html(
+                    "<center><b><u>"+ country[0].key + "</u></b></center>" +
+                    "<br><b>Import: </b>" + "$" + d3.format(",.2f")(importVal)+"B " +
+                    "<br><b>Export: </b>" + "$" + d3.format(",.2f")(exportVal)+"B" +
+                    "<br><b>Net&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:    </b>" + "$" + d3.format(",.2f")(exportVal+importVal)+"B"
+                    )
+                    .style("left", (d3.event.pageX) + "px")
+                    .style("top", (d3.event.pageY + 3) + "px");
+            })
+            .on('mouseover.fade', fade(0.1))
+            .on("mouseout.tooltip", function() {
+                tooltip.transition()
+                    .duration(100)
+                    .style("opacity", 0);
+            })
+            .on('mouseout', fade(1))
+            .on("mousemove", function() {
+                tooltip.style("left", (d3.event.pageX) + "px")
+                    .style("top", (d3.event.pageY + 10) + "px");
+            });
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////
+        // TITLE & SUBTITLE
+        //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        svg.append("text")
+            .attr("x", (width / 2.3))
+            .attr("y", margin.top / 4)
+            .attr("text-anchor", "middle")
+            .style("font-size", "16px")
+            .style("font-weight", "bold")
+            .text("World Trade Network Graph");
+
+       // var selectedSource      = '';
+        //var selectedDestination = '';
+        //var selectedYear        = '2015';
+        //var selectedCategory    = '';
+        //var selectedProduct     = '27 - Mineral fuels';
+
+        var subTitle = "";
+
+        if (selectedSource != ''){
+            subTitle += 'Exporter: ' + selectedSource
+        }
+
+        if (selectedDestination != ''){
+            if(subTitle != ''){
+                subTitle += ', Importer: ' + selectedDestination
+            }else {
+                subTitle += 'Importer: ' + selectedDestination
+            }
+        }
+
+        if (selectedYear != ''){
+            if(subTitle != ''){
+                subTitle += ', Year: ' + selectedYear
+            }else {
+                subTitle += 'Year: ' + selectedYear
+            }
+        }
+
+        if (selectedCategory != ''){
+            if(subTitle != ''){
+                subTitle += ', Category: "' + selectedCategory + '"'
+            }else {
+                subTitle += 'Category: "' + selectedCategory + '"'
+            }
+        }
+
+
+        if (selectedProduct != ''){
+            if(subTitle != ''){
+                subTitle += ', Product: "' + selectedProduct + '"'
+            } else {
+            subTitle += 'Product: "' + selectedProduct + '"'
+            }
+        }
+
+        svg.append("text")
+            .attr("x", (width / 2.3))
+            .attr("y", margin.top / 2)
+            .attr("text-anchor", "middle")
+            .style("font-size", "14px")
+            .style("font-weight", "italics")
+            .html(subTitle);
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////
+        // FADE ON TOOLTIP
+        //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        const linkedByIndex = {};
+        links.forEach(d => {
+            linkedByIndex[`${d.source.index},${d.target.index}`] = 1;
+        });
+
+        function isConnected(a, b) {
+            return linkedByIndex[`${a.index},${b.index}`] || linkedByIndex[`${b.index},${a.index}`] || a.index === b.index;
+        }
+
+        function fade(opacity) {
+            return d => {
+                node.style('stroke-opacity', function (o) {
+                    const thisOpacity = isConnected(d, o) ? 1 : opacity;
+                    this.setAttribute('fill-opacity', thisOpacity);
+                    return thisOpacity;
+                });
+                path.style('stroke-opacity', o => (o.source === d || o.target === d ? 1 : opacity));
+                if(opacity === 1){
+                    path.attr('marker-end', "url(#triangle)");
+                } else {
+                path.attr('marker-end', o => (o.source === d || o.target === d ? "url(#triangle)" : ""));
+                }
+            };
+        };
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////
+        // LEGEND
+        //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        var legend = svg.selectAll('g.legendEntry')
+            .data(nodeColor.range()).enter()
+            .append('g').attr('class', 'legendEntry');
+
+        legend.append('circle')
+            .attr("cx", function(d, i){ return (i*20) + 40;})
+            .attr("cy", 100)
+            .attr("r","0.4em")
+            .style("fill", function(d, i) {return d;});
+
+        svg.append("text")
+            .attr("x", 50)
+            .attr("y", 80)
+            .attr("text-anchor", "middle")
+            .style("font-size", "12px")
+            .text('Net Importer');
+
+        svg.append("text")
+            .attr("x", 200)
+            .attr("y", 80)
+            .attr("text-anchor", "middle")
+            .style("font-size", "12px")
+            .text('Net Exporter');
+
+        /*
+        legendRect
+            .append('rect')
+            .attr("x", width - 100)
+            .attr("y", function(d, i) { return (i * 20) + 40; })
+            .attr("width", 10)
+            .attr("height", 10)
+            .style("fill", function(d, i) {
+                return d;
+            });
+
+            svg.selectAll('g.legendText')
+                .data(nodeColor.range()).enter()
+                .append('text')
+                .attr("x", width - 85) //leave 5 pixel space after the <rect>
+                .attr("y", function(d, i) {return (i * 20) + 50;})
+                .text(function(d,i) {
+                     return "$" + d3.format(",.0f")(nodeColor.invertExtent(d)[1]/1000000000)+"B";
+                })
+                .style("font-size", "14px");
+        */
+
+
+    });
+
+</script>
+
+</body>
+</html>
