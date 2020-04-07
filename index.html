@@ -53,7 +53,7 @@
     var query={source:'', destination:'', year:'', category:'', product:''};
     for(i=0;i<search_values.length;i++){
         telem=search_values[i].split('=');
-        query[telem[0]]=telem[1];
+        query[telem[0]]=decodeURIComponent(telem[1]);
     }
 
     // Data Filters
