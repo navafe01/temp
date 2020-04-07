@@ -329,7 +329,7 @@
 
                 tooltip.html(
                     "<center><b><u>"+ country[0].key + "</u></b></center>" +
-                    "<br><b>Import: </b>" + "$" + d3.format(",.2f")(importVal)+"B " +
+                    "<br><b>Import: </b>" + "$" + d3.format(",.2f")(-1*importVal)+"B " +
                     "<br><b>Export: </b>" + "$" + d3.format(",.2f")(exportVal)+"B" +
                     "<br><b>Net&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:    </b>" + "$" + d3.format(",.2f")(exportVal+importVal)+"B"
                     )
