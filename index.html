@@ -42,7 +42,7 @@
 <script>
 
     // For Tableau
-    var width  = 800, height = 750;
+    var width  = 750, height = 600;
     var margin = ({top: 70, right: 30, bottom: 30, left: 40});
     var maxItems = 1000;
 
@@ -160,7 +160,7 @@
 
         var simulation = d3.forceSimulation()
             .nodes(d3.values(nodes))
-            .force('center', d3.forceCenter(width / 2.3, ((height) / 2.8)  + margin.top))
+            .force('center', d3.forceCenter(width / 2, ((height) / 2.8)  + margin.top))
             .force("charge", d3.forceManyBody().strength(-500).distanceMin(2).distanceMax(1000))
             .force("collide", d3.forceCollide().strength(-1000).radius(5))
             .force("link", d3.forceLink(links).distance(200))
@@ -363,7 +363,7 @@
         //////////////////////////////////////////////////////////////////////////////////////////////////////
 
         svg.append("text")
-            .attr("x", (width / 2.3))
+            .attr("x", (width / 2))
             .attr("y", margin.top / 4)
             .attr("text-anchor", "middle")
             .style("font-size", "16px")
@@ -416,7 +416,7 @@
         }
 
         svg.append("text")
-            .attr("x", (width / 2.3))
+            .attr("x", (width / 2))
             .attr("y", margin.top / 2)
             .attr("text-anchor", "middle")
             .style("font-size", "14px")
