@@ -42,9 +42,9 @@
 <script>
 
     // For Tableau
-    var width  = 900, height = 800;
+    var width  = 800, height = 750;
     var margin = ({top: 70, right: 30, bottom: 30, left: 40});
-    var maxItems = 100;
+    var maxItems = 1000;
 
     // Select Filters from Parameters
     var i=0;
@@ -151,7 +151,8 @@
 
         // Variables for Nodes
         var nodeColor = d3.scaleQuantize().domain([minVal, maxVal]).range(colorbrewer.RdBu[9]);
-        var nodeSize  = d3.scaleQuantize().domain([0, d3.max([Math.abs(maxVal), Math.abs(minVal)])]).range([10,35]);
+        var nodeExpSize  = d3.scaleQuantize().domain([0,maxVal]).range([10,17,24,31]);
+        var nodeImpSize  = d3.scaleQuantize().domain([minVal,0]).range([31,24,17,10]);
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////
         // Simulation
@@ -160,9 +161,9 @@
         var simulation = d3.forceSimulation()
             .nodes(d3.values(nodes))
             .force('center', d3.forceCenter(width / 2.3, ((height) / 2.8)  + margin.top))
-            .force("charge", d3.forceManyBody().strength(-200).distanceMin(100).distanceMax(1000))
+            .force("charge", d3.forceManyBody().strength(-500).distanceMin(2).distanceMax(1000))
             .force("collide", d3.forceCollide().strength(-1000).radius(5))
-            .force("link", d3.forceLink(links).distance(300))
+            .force("link", d3.forceLink(links).distance(200))
             .force("x", d3.forceX().strength(0.1))
             .force("y", d3.forceY().strength(0.2))
             //.on('tick', ticked);
@@ -210,7 +211,12 @@
                     return d1.key == d.target.name;
                 });
 
-                targetRadius = nodeSize(Math.abs(flatNodeValue[0].value)) + 5;
+                if(flatNodeValue[0].value > 0) {
+                    targetRadius = nodeExpSize(flatNodeValue[0].value) + 5;
+                } else {
+                    targetRadius = nodeImpSize(flatNodeValue[0].value) + 5;
+                }
+
 
                 // x and y distances from center to outside edge of target node
                 offsetX = (diffX * targetRadius) / pathLength;
@@ -298,7 +304,11 @@
         node.append("circle")
             .data(flatNodes)
             .attr("r", function(d) {
-                return nodeSize(Math.abs(d.value));
+                if(d.value > 0) {
+                    return nodeExpSize(d.value);
+                } else {
+                    return nodeImpSize(d.value) ;
+                }
             })
             .attr('fill', function(d){
                 return nodeColor(d.value)
