@@ -42,16 +42,26 @@
 <script>
 
     // For Tableau
-    var width  = 1200, height = 800;
+    var width  = 900, height = 800;
     var margin = ({top: 70, right: 30, bottom: 30, left: 40});
     var maxItems = 100;
 
+    // Select Filters from Parameters
+    var i=0;
+    var telem;
+    var search_values=location.search.replace('\?','').split('&');
+    var query={source:'', destination:'', year:'', category:'', product:''};
+    for(i=0;i<search_values.length;i++){
+        telem=search_values[i].split('=');
+        query[telem[0]]=telem[1];
+    }
+
     // Data Filters
-    var selectedSource      = '';
-    var selectedDestination = '';
-    var selectedYear        = '2015';
-    var selectedCategory    = '';
-    var selectedProduct     = '27 - Mineral fuels';
+    var selectedSource      = query['source'];
+    var selectedDestination = query['destination'];
+    var selectedYear        = query['year'];
+    var selectedCategory    = query['category'];
+    var selectedProduct     = query['product'];
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     // DATA PREPARATION
@@ -149,7 +159,7 @@
 
         var simulation = d3.forceSimulation()
             .nodes(d3.values(nodes))
-            .force('center', d3.forceCenter(width / 2.3, ((height) / 2.3)  + margin.top))
+            .force('center', d3.forceCenter(width / 2.3, ((height) / 2.8)  + margin.top))
             .force("charge", d3.forceManyBody().strength(-200).distanceMin(100).distanceMax(1000))
             .force("collide", d3.forceCollide().strength(-1000).radius(5))
             .force("link", d3.forceLink(links).distance(300))
@@ -442,20 +452,20 @@
 
         legend.append('circle')
             .attr("cx", function(d, i){ return (i*20) + 40;})
-            .attr("cy", 100)
+            .attr("cy", 80)
             .attr("r","0.4em")
             .style("fill", function(d, i) {return d;});
 
         svg.append("text")
             .attr("x", 50)
-            .attr("y", 80)
+            .attr("y", 60)
             .attr("text-anchor", "middle")
             .style("font-size", "12px")
             .text('Net Importer');
 
         svg.append("text")
             .attr("x", 200)
-            .attr("y", 80)
+            .attr("y", 60)
             .attr("text-anchor", "middle")
             .style("font-size", "12px")
             .text('Net Exporter');
