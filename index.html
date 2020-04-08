@@ -66,7 +66,7 @@
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     // DATA PREPARATION
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    d3.dsv(",", "data_1b.csv").then(function(data) {
+    d3.dsv(",", "data_5m.csv").then(function(data) {
         var nodes = {};
 
         var filteredData = data.filter(function(d){
@@ -74,8 +74,8 @@
                 (selectedSource      === '' || selectedSource      === '(All)' || selectedSource.includes(d.Source)) &&
                 (selectedDestination === '' || selectedDestination === '(All)' || selectedDestination.includes(d.Destination))  &&
                 (selectedYear        === '' || selectedYear        === '(All)' || selectedYear.includes(d.Year)) &&
-                (selectedCategory    === '' || selectedCategory    === '(All)' || selectedCategory.includes(d.Category)) &&
-                (selectedProduct     === '' || selectedProduct     === '(All)' || selectedProduct.includes(d.Product))
+                (selectedCategory    === '' || selectedCategory    === '(All)' || selectedCategory.includes(d.Category)) // &&
+                //(selectedProduct     === '' || selectedProduct     === '(All)' || selectedProduct.includes(d.Product))
             ) {
                 return d;
             }
@@ -401,12 +401,13 @@
             ctT = selectedCategory.slice(0,3) + ', and others ';
         };
 
+        /*
         if(Array.isArray(selectedProduct) && selectedProduct.length < 3){
             prT = selectedProduct;
         } else {
             prT = selectedProduct.slice(0,3) + ', and others ';
         };
-
+        */
 
         if (selectedSource != ''){
             subTitle += 'Exporter: ' + srcT
@@ -435,22 +436,22 @@
                 subTitle += 'Category: "' + ctT + '"'
             }
         }
-
-        if (selectedProduct != ''){
-            if(subTitle != ''){
-                subTitle += ', Product: "' + prT + '"'
-            } else {
-            subTitle += 'Product: "' + prT + '"'
-            }
-        }
-
+        /*
+                if (selectedProduct != ''){
+                    if(subTitle != ''){
+                        subTitle += ', Product: "' + prT + '"'
+                    } else {
+                    subTitle += 'Product: "' + prT + '"'
+                    }
+                }
+        */
         svg.append("text")
-            .attr("x", (width / 2.5))
-            .attr("y", margin.top / 2)
-            .attr("text-anchor", "middle")
-            .style("font-size", "14px")
-            .style("font-weight", "italics")
-            .html(subTitle);
+        .attr("x", (width / 2.5))
+        .attr("y", margin.top / 2)
+        .attr("text-anchor", "middle")
+        .style("font-size", "14px")
+        .style("font-weight", "italics")
+        .html(subTitle);
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////
         // FADE ON TOOLTIP
@@ -476,7 +477,7 @@
                 if(opacity === 1){
                     path.attr('marker-end', "url(#triangle)");
                 } else {
-                path.attr('marker-end', o => (o.source === d || o.target === d ? "url(#triangle)" : ""));
+                    path.attr('marker-end', o => (o.source === d || o.target === d ? "url(#triangle)" : ""));
                 }
             };
         };
