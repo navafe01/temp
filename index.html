@@ -42,7 +42,7 @@
 <script>
 
     // For Tableau
-    var width  = 750, height = 600;
+    var width  = 1000, height = 600;
     var margin = ({top: 70, right: 30, bottom: 30, left: 40});
     var maxItems = 1000;
 
@@ -53,7 +53,7 @@
     var query={source:'', destination:'', year:'', category:'', product:''};
     for(i=0;i<search_values.length;i++){
         telem=search_values[i].split('=');
-        query[telem[0]]=decodeURIComponent(telem[1]);
+        query[telem[0]]=decodeURIComponent(telem[1]).split(',');
     }
 
     // Data Filters
@@ -71,11 +71,11 @@
 
         var filteredData = data.filter(function(d){
             if (
-                (selectedSource      === '' || selectedSource      === '(All)' || d.Source      === selectedSource) &&
-                (selectedDestination === '' || selectedDestination === '(All)' || d.Destination === selectedDestination)  &&
-                (selectedYear        === '' || selectedYear        === '(All)' || d.Year        === selectedYear) &&
-                (selectedCategory    === '' || selectedCategory    === '(All)' || d.Category    === selectedCategory) &&
-                (selectedProduct     === '' || selectedProduct     === '(All)' || d.Product     === selectedProduct)
+                (selectedSource      === '' || selectedSource      === '(All)' || selectedSource.includes(d.Source)) &&
+                (selectedDestination === '' || selectedDestination === '(All)' || selectedDestination.includes(d.Destination))  &&
+                (selectedYear        === '' || selectedYear        === '(All)' || selectedYear.includes(d.Year)) &&
+                (selectedCategory    === '' || selectedCategory    === '(All)' || selectedCategory.includes(d.Category)) &&
+                (selectedProduct     === '' || selectedProduct     === '(All)' || selectedProduct.includes(d.Product))
             ) {
                 return d;
             }
@@ -160,7 +160,7 @@
 
         var simulation = d3.forceSimulation()
             .nodes(d3.values(nodes))
-            .force('center', d3.forceCenter(width / 2, ((height) / 2.8)  + margin.top))
+            .force('center', d3.forceCenter(width / 2.5, ((height) / 2.8)  + margin.top))
             .force("charge", d3.forceManyBody().strength(-500).distanceMin(2).distanceMax(1000))
             .force("collide", d3.forceCollide().strength(-1000).radius(5))
             .force("link", d3.forceLink(links).distance(200))
@@ -363,60 +363,89 @@
         //////////////////////////////////////////////////////////////////////////////////////////////////////
 
         svg.append("text")
-            .attr("x", (width / 2))
+            .attr("x", (width / 2.5))
             .attr("y", margin.top / 4)
             .attr("text-anchor", "middle")
             .style("font-size", "16px")
             .style("font-weight", "bold")
             .text("World Trade Network Graph");
 
-       // var selectedSource      = '';
-        //var selectedDestination = '';
-        //var selectedYear        = '2015';
-        //var selectedCategory    = '';
-        //var selectedProduct     = '27 - Mineral fuels';
-
         var subTitle = "";
+        var srcT = "";
+        var dstT = "";
+        var yrT = "";
+        var ctT = "";
+        var prT = "";
+
+        if(Array.isArray(selectedSource) && selectedSource.length < 3){
+            srcT = selectedSource;
+        } else {
+            srcT = selectedSource.slice(0,3)+ ', and others ';
+        };
+
+        if(Array.isArray(selectedDestination) && selectedDestination.length < 3){
+            dstT = selectedDestination;
+        } else {
+            dstT = selectedDestination.slice(0,3) + ', and others ';
+        };
+
+        if(Array.isArray(selectedYear) && selectedYear.length < 3){
+            yrT = selectedYear;
+        } else {
+            yrT = selectedYear.slice(0,3) + ', and others ';
+        };
+
+        if(Array.isArray(selectedCategory) && selectedCategory.length < 3){
+            ctT = selectedCategory;
+        } else {
+            ctT = selectedCategory.slice(0,3) + ', and others ';
+        };
+
+        if(Array.isArray(selectedProduct) && selectedProduct.length < 3){
+            prT = selectedProduct;
+        } else {
+            prT = selectedProduct.slice(0,3) + ', and others ';
+        };
+
 
         if (selectedSource != ''){
-            subTitle += 'Exporter: ' + selectedSource
+            subTitle += 'Exporter: ' + srcT
         }
 
         if (selectedDestination != ''){
             if(subTitle != ''){
-                subTitle += ', Importer: ' + selectedDestination
+                subTitle += ', Importer: ' + dstT
             }else {
-                subTitle += 'Importer: ' + selectedDestination
+                subTitle += 'Importer: ' + dstT
             }
         }
 
         if (selectedYear != ''){
             if(subTitle != ''){
-                subTitle += ', Year: ' + selectedYear
+                subTitle += ', Year: ' + yrT
             }else {
-                subTitle += 'Year: ' + selectedYear
+                subTitle += 'Year: ' + yrT
             }
         }
 
         if (selectedCategory != ''){
             if(subTitle != ''){
-                subTitle += ', Category: "' + selectedCategory + '"'
+                subTitle += ', Category: "' + ctT + '"'
             }else {
-                subTitle += 'Category: "' + selectedCategory + '"'
+                subTitle += 'Category: "' + ctT + '"'
             }
         }
 
-
         if (selectedProduct != ''){
             if(subTitle != ''){
-                subTitle += ', Product: "' + selectedProduct + '"'
+                subTitle += ', Product: "' + prT + '"'
             } else {
-            subTitle += 'Product: "' + selectedProduct + '"'
+            subTitle += 'Product: "' + prT + '"'
             }
         }
 
         svg.append("text")
-            .attr("x", (width / 2))
+            .attr("x", (width / 2.5))
             .attr("y", margin.top / 2)
             .attr("text-anchor", "middle")
             .style("font-size", "14px")
