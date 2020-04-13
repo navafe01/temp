@@ -25,7 +25,7 @@
     div.tooltip {
         position: absolute;
         background-color: white;
-        max-width: 200px;
+        max-width: 400px;
         height: auto;
         padding: 1px;
         border-style: solid;
@@ -61,12 +61,12 @@
     var selectedDestination = query['destination'];
     var selectedYear        = query['year'];
     var selectedCategory    = query['category'];
-    var selectedProduct     = query['product'];
+    //var selectedProduct     = query['product'];
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     // DATA PREPARATION
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    d3.dsv(",", "data_5m.csv").then(function(data) {
+    d3.dsv(",", "data_75m.csv").then(function(data) {
         var nodes = {};
 
         var filteredData = data.filter(function(d){
@@ -90,7 +90,23 @@
             .key(function(d) { return d.Source; })
             .key(function(d) { return d.Destination })
             .rollup(function(recs){return {
-                "value": d3.sum(recs, function(d){return +d.Value;})}})
+                "value": d3.sum(recs, function(d){return +d.Value;}),
+                "agriculturalland": d3.mean(recs, function(d){return +d.exports_per_agriculturalland;}),
+                "childmortality5": d3.mean(recs, function(d){return +d.exports_per_childmortality5;}),
+                "electricityaccess": d3.mean(recs, function(d){return +d.exports_per_electricityaccess;}),
+                "forestarea": d3.mean(recs, function(d){return +d.exports_per_forestarea;}),
+                "gdplocalreal": d3.mean(recs, function(d){return +d.exports_per_gdplocalreal;}),
+                "infantmortality": d3.mean(recs, function(d){return +d.exports_per_infantmortality;}),
+                "internetpercentage": d3.mean(recs, function(d){return +d.exports_per_internetpercentage;}),
+                "laborforce": d3.mean(recs, function(d){return +d.exports_per_laborforce;}),
+                "lifeexpectancy": d3.mean(recs, function(d){return +d.exports_per_lifeexpectancy;}),
+                "population": d3.mean(recs, function(d){return +d.exports_per_population;}),
+                "renewableenergy": d3.mean(recs, function(d){return +d.exports_per_renewableenergy;}),
+                "ruralpopulation": d3.mean(recs, function(d){return +d.exports_per_ruralpopulation;}),
+                "touristreceipt": d3.mean(recs, function(d){return +d.exports_per_touristreceipt;}),
+                "unemploymentILO": d3.mean(recs, function(d){return +d.exports_per_unemploymentILO;})
+                }}
+                )
             .entries(topData);
 
         var links = [];
@@ -99,7 +115,21 @@
                 links.push({
                     'source': d0.key,
                     'target': d1.key,
-                    'value':  d1.value.value
+                    'value':  d1.value.value,
+                    'agriculturalland':  d1.value.agriculturalland,
+                    'childmortality5':  d1.value.childmortality5,
+                    'electricityaccess':  d1.value.electricityaccess,
+                    'forestarea':  d1.value.forestarea,
+                    'gdplocalreal':  d1.value.gdplocalreal,
+                    'infantmortality':  d1.value.infantmortality,
+                    'internetpercentage':  d1.value.internetpercentage,
+                    'laborforce':  d1.value.laborforce,
+                    'lifeexpectancy':  d1.value.lifeexpectancy,
+                    'population':  d1.value.population,
+                    'renewableenergy':  d1.value.renewableenergy,
+                    'ruralpopulation':  d1.value.ruralpopulation,
+                    'touristreceipt':  d1.value.touristreceipt,
+                    'unemploymentILO':  d1.value.unemploymentILO
                 })
             })
         });
@@ -107,17 +137,73 @@
         var sourceNodes = [];
         var destinationNodes = [];
         rollupData.forEach(function(n0)  {
-            var tmp_val = 0.0;
+            var t01 = 0.0;
+            var t02 = 0.0;
+            var t03 = 0.0;
+            var t04 = 0.0;
+            var t05 = 0.0;
+            var t06 = 0.0;
+            var t07 = 0.0;
+            var t08 = 0.0;
+            var t09 = 0.0;
+            var t10 = 0.0;
+            var t11 = 0.0;
+            var t12 = 0.0;
+            var t13 = 0.0;
+            var t14 = 0.0;
+            var t15 = 0.0;
             n0.values.forEach(function(n1) {
                 destinationNodes.push({
                     key: n1.key,
-                    value: -n1.value.value
+                    value: -n1.value.value/*,
+                    agriculturalland:  n1.value.agriculturalland,
+                    childmortality5:  n1.value.childmortality5,
+                    electricityaccess:  n1.value.electricityaccess,
+                    forestarea:  n1.value.forestarea,
+                    gdplocalreal:  n1.value.gdplocalreal,
+                    infantmortality:  n1.value.infantmortality,
+                    internetpercentage:  n1.value.internetpercentage,
+                    laborforce:  n1.value.laborforce,
+                    lifeexpectancy:  n1.value.lifeexpectancy,
+                    population:  n1.value.population,
+                    renewableenergy:  n1.value.renewableenergy,
+                    ruralpopulation:  n1.value.ruralpopulation,
+                    touristreceipt:  n1.value.touristreceipt,
+                    unemploymentILO:  n1.value.unemploymentILO*/
                 });
-                tmp_val += n1.value.value;
+                t01 += n1.value.value;
+                t02 += n1.value.agriculturalland;
+                t03 += n1.value.childmortality5;
+                t04 += n1.value.electricityaccess;
+                t05 += n1.value.forestarea;
+                t06 += n1.value.gdplocalreal;
+                t07 += n1.value.infantmortality;
+                t08 += n1.value.internetpercentage;
+                t09 += n1.value.laborforce;
+                t10 += n1.value.lifeexpectancy;
+                t11 += n1.value.population;
+                t12 += n1.value.renewableenergy;
+                t13 += n1.value.ruralpopulation;
+                t14 += n1.value.touristreceipt;
+                t15 += n1.value.unemploymentILO;
             });
             sourceNodes.push({
                 key: n0.key,
-                value: tmp_val
+                value: t01,
+                agriculturalland: t02,
+                childmortality5: t03,
+                electricityaccess: t04,
+                forestarea: t05,
+                gdplocalreal: t06,
+                infantmortality: t07,
+                internetpercentage: t08,
+                laborforce: t09,
+                lifeexpectancy: t10,
+                population: t11,
+                renewableenergy: t12,
+                ruralpopulation: t13,
+                touristreceipt: t14,
+                unemploymentILO: t15
             });
         });
 
@@ -125,14 +211,45 @@
 
         var sumNodes = d3.nest()
             .key(function(d) {return d.key})
-            .rollup(function(recs){return { "value": d3.sum(recs, function(d){return +d.value;})}})
+            .rollup(function(recs){return {
+                "value": d3.sum(recs, function(d){return +d.value;}),
+                "agriculturalland": d3.mean(recs, function(d){return +d.agriculturalland;}),
+                "childmortality5": d3.mean(recs, function(d){return +d.childmortality5;}),
+                "electricityaccess": d3.mean(recs, function(d){return +d.electricityaccess;}),
+                "forestarea": d3.mean(recs, function(d){return +d.forestarea;}),
+                "gdplocalreal": d3.mean(recs, function(d){return +d.gdplocalreal;}),
+                "infantmortality": d3.mean(recs, function(d){return +d.infantmortality;}),
+                "internetpercentage": d3.mean(recs, function(d){return +d.internetpercentage;}),
+                "laborforce": d3.mean(recs, function(d){return +d.laborforce;}),
+                "lifeexpectancy": d3.mean(recs, function(d){return +d.lifeexpectancy;}),
+                "population": d3.mean(recs, function(d){return +d.population;}),
+                "renewableenergy": d3.mean(recs, function(d){return +d.renewableenergy;}),
+                "ruralpopulation": d3.mean(recs, function(d){return +d.ruralpopulation;}),
+                "touristreceipt": d3.mean(recs, function(d){return +d.touristreceipt;}),
+                "unemploymentILO": d3.mean(recs, function(d){return +d.unemploymentILO;})
+
+            }})
             .entries(flattenNodes);
 
         var flatNodes = [];
         sumNodes.forEach(function(n0){
             flatNodes.push({
                 key: n0.key,
-                value: n0.value.value
+                value: n0.value.value,
+                agriculturalland:  n0.value.agriculturalland,
+                childmortality5:  n0.value.childmortality5,
+                electricityaccess:  n0.value.electricityaccess,
+                forestarea:  n0.value.forestarea,
+                gdplocalreal:  n0.value.gdplocalreal,
+                infantmortality:  n0.value.infantmortality,
+                internetpercentage:  n0.value.internetpercentage,
+                laborforce:  n0.value.laborforce,
+                lifeexpectancy:  n0.value.lifeexpectancy,
+                population:  n0.value.population,
+                renewableenergy:  n0.value.renewableenergy,
+                ruralpopulation:  n0.value.ruralpopulation,
+                touristreceipt:  n0.value.touristreceipt,
+                unemploymentILO:  n0.value.unemploymentILO
             });
         });
 
@@ -329,20 +446,39 @@
                     return d1.key === d.name;
                 });
 
-                var importVal = 0, exportVal = 0;
+                var importVal = 0, exportVal = 0, exportsUNSection = '';
                 if (typeof(imports) != "undefined" && imports != 0) {
                     importVal = imports[0].value/1000000000;
                 }
                 if (typeof(exports) != "undefined" && exports != 0) {
                     exportVal = exports[0].value/1000000000;
+                    exportsUNSection = "<br><br><center><b><u> UN Indicators </u></b></center>" +
+                        "<center> Trade Exports / Country Indicator </center><br>" +
+                        "<table><tr><th></th><th></th></tr>" +
+                            "<tr><td><b>Population: </b></td><td>" + d3.format(",.2f")(exports[0].population) + "</td></tr>"+
+                            "<tr><td><b>GDP Local (Real): </b></td><td>" + d3.format(",.2f")(exports[0].gdplocalreal) +  "</td></tr>"+
+                            "<tr><td><b>Rural Population: </b></td><td>" + d3.format(",.2f")(exports[0].ruralpopulation) + "</td></tr>"+
+                            "<tr><td><b>Unemployment ILO: </b></td><td>" + d3.format(",.2f")(exports[0].unemploymentILO) + "</td></tr>"+
+                            "<tr><td><b>Labor Force: </b></td><td>" + d3.format(",.2f")(exports[0].laborforce) + "</td></tr>"+
+                            "<tr><td><b>Life Expectancy: </b></td><td>" + d3.format(",.2f")(exports[0].lifeexpectancy) + "</td></tr>"+
+                            "<tr><td><b>Infant Mortality: </b></td><td>" + d3.format(",.2f")(exports[0].infantmortality) + "</td></tr>"+
+                            "<tr><td><b>Child Mortality: </b></td><td>" + d3.format(",.2f")(exports[0].childmortality5) + "</td></tr>"+
+                            "<tr><td><b>Internet Pct: </b></td><td>" + d3.format(",.2f")(exports[0].internetpercentage) + "</td></tr>"+
+                            "<tr><td><b>Electricity Access: </b></td><td>" + d3.format(",.2f")(exports[0].electricityaccess) + "</td></tr>"+
+                            "<tr><td><b>Renewable Energy: </b></td><td>" + d3.format(",.2f")(exports[0].renewableenergy) + "</td></tr>"+
+                            "<tr><td><b>Tourist Receipts: </b></td><td>" + d3.format(",.2f")(exports[0].touristreceipt) + "</td></tr>"+
+                            "<tr><td><b>Forest Area: </b></td><td>" + d3.format(",.2f")(exports[0].forestarea) + "</td></tr>"+
+                            "<tr><td><b>Agricultural Land: </b></td><td>" + d3.format(",.2f")(exports[0].agriculturalland) + "</td></tr>"+
+                        "</table>"
                 }
 
                 tooltip.html(
                     "<center><b><u>"+ country[0].key + "</u></b></center>" +
-                    "<br><b>Import: </b>" + "$" + d3.format(",.2f")(-1*importVal)+"B " +
-                    "<br><b>Export: </b>" + "$" + d3.format(",.2f")(exportVal)+"B" +
-                    "<br><b>Net&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:    </b>" + "$" + d3.format(",.2f")(exportVal+importVal)+"B"
-                    )
+                    "<table><tr><th></th><th></th></tr>" +
+                        "<tr><td><b>Import: </b></td><td>" + "$" + d3.format(",.2f")(-1*importVal)+"B " + "</td></tr>"+
+                        "<tr><td><b>Export: </b></td><td>" + "$" + d3.format(",.2f")(exportVal)+"B" + "</td></tr>"+
+                        "<tr><td><b>Net: </b></td><td>" + "$" + d3.format(",.2f")(exportVal+importVal)+"B" + "</td></tr>"+
+                    "</table>" + exportsUNSection)
                     .style("left", (d3.event.pageX) + "px")
                     .style("top", (d3.event.pageY + 3) + "px");
             })
